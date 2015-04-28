@@ -46,11 +46,14 @@ namespace Velometer
         int gn = 0;
         Accelerometer accelerometer;
         AccelerometerReading accelerometerReading = null;
+        DispatcherTimer dispatcherTimer = new DispatcherTimer();
 
         Geolocator gpswatcher = new Geolocator()
         {
             //移动阈值
-            MovementThreshold = 20
+            MovementThreshold = 20,
+                            //精度：高
+            DesiredAccuracy = PositionAccuracy.High
         };
 
         private void HardwareButtons_BackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
@@ -69,6 +72,10 @@ namespace Velometer
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
             Windows.Phone.UI.Input.HardwareButtons.BackPressed += HardwareButtons_BackPressed;
+            //dispatcherTimer.Start();
+            dispatcherTimer.Tick += new EventHandler<object>(dispatcherTimer_Tick);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 1);
+            //采样间隔：1s
         }
 
         /// <summary>
@@ -156,6 +163,11 @@ namespace Velometer
 
         #endregion
 
+        private void dispatcherTimer_Tick(object sender, object e)
+        {
+            AcceShowData();
+            ShowGPSData();
+        }
         #region accelerometer
         private async void Get_Acce_Data(object sender, RoutedEventArgs e)
         {
@@ -178,7 +190,10 @@ namespace Velometer
                 accelerometerReading = accelerometer.GetCurrentReading();
                 //显示数据
                 AcceShowData();
+                dispatcherTimer.Start();
             }
+
+            Get_GPS_Data();
         }
 
         private async void accelerometer_ReadingChanged(Accelerometer sender, AccelerometerReadingChangedEventArgs args)
@@ -202,7 +217,7 @@ namespace Velometer
             double ya = accelerometerReading.AccelerationY;
             double za = accelerometerReading.AccelerationZ;
             //处理，计算数据
-            double dt = accelerometer.MinimumReportInterval;
+            double dt = 1;//accelerometer.MinimumReportInterval;
             if (ya != 0)
             {
                 an++;
@@ -227,7 +242,7 @@ namespace Velometer
         #endregion
 
         #region gps
-        private async void Get_GPS_Data(object sender, RoutedEventArgs e)
+        private async void Get_GPS_Data()
         {
             if (gpswatcher == null)
             {
@@ -238,13 +253,11 @@ namespace Velometer
             {
                 gv.Add(0);
                 Latitude.Add(0); Longitude.Add(0);
-                //精度：高
-                gpswatcher.DesiredAccuracy = PositionAccuracy.High;
                 //位置变化
                 gpswatcher.PositionChanged += gpswatcherPositionChanged;
                 //传感器状态变化
                 gpswatcher.StatusChanged += gpswatcherStatusChanged;
-                ShowGPSData();
+                //ShowGPSData();
             }
         }
 
@@ -252,7 +265,7 @@ namespace Velometer
         {
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                ShowGPSData();
+                //ShowGPSData();
             });
         }
 
@@ -281,29 +294,41 @@ namespace Velometer
             try
             {
                 Geoposition pos = await gpswatcher.GetGeopositionAsync();
-                //南北
-                Latitude.Add( pos.Coordinate.Point.Position.Latitude);
-                //东西
-                Longitude.Add( pos.Coordinate.Point.Position.Longitude);
-                gn++;
+                double temp1 = pos.Coordinate.Point.Position.Latitude;
+                double temp2 = pos.Coordinate.Point.Position.Longitude;
+
+                    if (((Latitude[gn] != temp1) || (Longitude[gn] != temp2)) == true)
+                {
+                    //南北
+                    Latitude.Add(temp1);
+                    //东西
+                    Longitude.Add(temp2);
+                    gn++;
+                    if (gn > 0)
+                    {
+                        //计算速度啦
+                        double temp = 0;
+                        temp = vector_add(Latitude[gn] - Latitude[gn - 1], Longitude[gn] - Longitude[gn - 1]);
+                        gv.Add(temp);
+                    }
+                    speed_GPS.Text = gv[gn].ToString("0.00");
+                }
+                else
+                { }
             }
             catch (System.UnauthorizedAccessException)
             {
                 speed_GPS.Text = "无数据";
             }
-            //计算速度啦
-            double temp=0;
 
-            gv.Add(temp);
-            speed_GPS.Text = gv[gn].ToString("0.00");
         }
 
 #endregion
 
-        double vector_add(double x, double y, double z)
+        double vector_add(double x, double y)
         {
             double result=0;
-            result = x * x + y * y + z * z;
+            result = x * x + y * y;
             result = Math.Sqrt(result);
             return result;
         }
