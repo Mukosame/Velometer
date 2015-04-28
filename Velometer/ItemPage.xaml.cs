@@ -1,5 +1,4 @@
 ﻿using Velometer.Common;
-using Velometer.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,6 +25,8 @@ namespace Velometer
     /// </summary>
     public sealed partial class ItemPage : Page
     {
+        private const string FirstGroupName = "FirstGroup";
+        private const string SecondGroupName = "SecondGroup";
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
 
@@ -66,11 +67,9 @@ namespace Velometer
         /// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested and
         /// a dictionary of state preserved by this page during an earlier
         /// session.  The state will be null the first time a page is visited.</param>
-        private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
             // TODO: Create an appropriate data model for your problem domain to replace the sample data.
-            var item = await SampleDataSource.GetItemAsync((string)e.NavigationParameter);
-            this.DefaultViewModel["Item"] = item;
         }
 
         /// <summary>
@@ -84,6 +83,10 @@ namespace Velometer
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
             // TODO: Save the unique state of the page here.
+        }
+
+        private void SecondPivot_Loaded(object sender, RoutedEventArgs e)
+        {
         }
 
         #region NavigationHelper registration
