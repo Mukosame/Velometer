@@ -31,10 +31,9 @@ namespace Velometer
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
        // private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-        List<double> xv = new List<double>();
-        List<double> yv = new List<double>();
-        List<double> zv = new List<double>();
-        //double[] yv; double[] zv;
+        //List<double> xv = new List<double>();
+        //List<double> yv = new List<double>();
+        //List<double> zv = new List<double>();
         List<double> v = new List<double>();
         List<double> gv = new List<double>();
        // double[] v; double[] gv;
@@ -44,6 +43,7 @@ namespace Velometer
         //计数变量
         int an = 0;
         int gn = 0;
+        bool unitflag = true; bool gpsunitflag = true;
         Accelerometer accelerometer;
         AccelerometerReading accelerometerReading = null;
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
@@ -51,7 +51,7 @@ namespace Velometer
         Geolocator gpswatcher = new Geolocator()
         {
             //移动阈值
-            MovementThreshold = 20,
+            MovementThreshold = 5,
                             //精度：高
             DesiredAccuracy = PositionAccuracy.High
         };
@@ -72,6 +72,12 @@ namespace Velometer
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
             Windows.Phone.UI.Input.HardwareButtons.BackPressed += HardwareButtons_BackPressed;
+            //给eclipse注册touch事件
+            zero.PointerPressed += Get_Acce_Data;
+            //给speed文本框注册touch事件
+            speed.PointerPressed += text_speed_touched;
+            //给gps speed文本框注册touch事件
+            speed_GPS.PointerPressed += text_gpsspeed_touched;
             //dispatcherTimer.Start();
             dispatcherTimer.Tick += new EventHandler<object>(dispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 1);
@@ -168,9 +174,13 @@ namespace Velometer
             AcceShowData();
             ShowGPSData();
         }
+
         #region accelerometer
+        //摸圆圈儿触发
         private async void Get_Acce_Data(object sender, RoutedEventArgs e)
         {
+            //修改zero圆圈的颜色
+            //zero.Fill= ;
             accelerometer = Accelerometer.GetDefault();
             if (accelerometer == null)
             {
@@ -179,7 +189,8 @@ namespace Velometer
             }
             else
             {
-                xv.Add(0); yv.Add(0); zv.Add(0); v.Add(0);
+                //xv.Add(0); yv.Add(0); zv.Add(0); 
+                v.Add(0);
                 //最小时间间隔
                 accelerometer.ReportInterval = accelerometer.MinimumReportInterval;
                 //加速度变化
@@ -213,20 +224,28 @@ namespace Velometer
         void AcceShowData()
         {
             //读取数据
-            double xa = accelerometerReading.AccelerationX;
-            double ya = accelerometerReading.AccelerationY;
-            double za = accelerometerReading.AccelerationZ;
+            double xa = 9.81*accelerometerReading.AccelerationX;
+            double ya = 9.81*accelerometerReading.AccelerationY;
+            double za = 9.81*accelerometerReading.AccelerationZ;
             //处理，计算数据
             double dt = 1;//accelerometer.MinimumReportInterval;
             if (ya != 0)
             {
                 an++;
-                v.Add(v[an - 1] + dt * accelerometerReading.AccelerationY);
+                v.Add(v[an - 1] + dt * ya);
                 // xv.Add(xv[an - 1] + dt * xa);
                 //yv.Add(yv[an - 1] + dt * xa);
                 //zv.Add(zv[an - 1] + dt * xa);
                 //v.Add(vector_add(xv[an], yv[an], zv[an]));
-                speed.Text = v[an].ToString("0.00");
+                if (unitflag == true)
+                {
+                    speed.Text = v[an].ToString("0.00") + "m/s";
+                }
+                if (unitflag==false)
+                {
+                    double vkm = v[an] / 3.6;
+                    speed.Text = vkm.ToString("0.0") + "km/h";
+                }
             }
             //显示加速传感器得到的速度数值
             // xspeed.Text = "x: " + xv[an].ToString("0.00");
@@ -234,9 +253,14 @@ namespace Velometer
             //zspeed.Text = "z: " + zv[an].ToString("0.00");
             else
             { }
+            xspeed.Text = xa.ToString("0.00");
+            yspeed.Text = ya.ToString("0.00");
+            zspeed.Text = za.ToString("0.00");
+            /*
             xspeed.Text = accelerometerReading.AccelerationX.ToString("0.00");
             yspeed.Text = accelerometerReading.AccelerationY.ToString("0.00");
             zspeed.Text = accelerometerReading.AccelerationZ.ToString("0.00");
+             * */
         }
 
         #endregion
@@ -304,14 +328,23 @@ namespace Velometer
                     //东西
                     Longitude.Add(temp2);
                     gn++;
-                    if (gn > 0)
-                    {
                         //计算速度啦
                         double temp = 0;
-                        temp = vector_add(Latitude[gn] - Latitude[gn - 1], Longitude[gn] - Longitude[gn - 1]);
+                        temp = GetDistance(Latitude[gn-1], Longitude[gn - 1], Latitude[gn], Longitude[gn]);
                         gv.Add(temp);
-                    }
-                    speed_GPS.Text = gv[gn].ToString("0.00");
+                        if (gn > 1)
+                        {
+                            if (gpsunitflag == true)
+                            {
+                                speed_GPS.Text = gv[gn].ToString("0.00")+"m/s";
+                            }
+                            else
+                            {
+                                double gpstemp = gv[gn] / 3.6;
+                                speed_GPS.Text = gpstemp.ToString("0.0") + "km/h";
+                            }
+                        }
+                    
                 }
                 else
                 { }
@@ -333,11 +366,31 @@ namespace Velometer
             return result;
         }
 
+        private const double EARTH_RADIUS = 6378137;//地球半径,单位m
+        private static double rad(double d)
+        {
+            return d * Math.PI / 180.0;
+        }
+
+        public static double GetDistance(double lat1, double lng1, double lat2, double lng2)
+        {
+            double radLat1 = rad(lat1);
+            double radLat2 = rad(lat2);
+            double a = radLat1 - radLat2;
+            double b = rad(lng1) - rad(lng2);
+
+            double s = 2 * Math.Asin(Math.Sqrt(Math.Pow(Math.Sin(a / 2), 2) +
+             Math.Cos(radLat1) * Math.Cos(radLat2) * Math.Pow(Math.Sin(b / 2), 2)));
+            s = s * EARTH_RADIUS;
+            s = Math.Round(s * 10000) / 10000;
+            return s;
+        }
+
         void Init()
         {
-            xv = new List<double>();
-            yv = new List<double>();
-            zv = new List<double>();
+            //xv = new List<double>();
+            //yv = new List<double>();
+            //zv = new List<double>();
             v = new List<double>();
             gv = new List<double>();
             Latitude = new List<double>();
@@ -350,6 +403,24 @@ namespace Velometer
            zspeed.Text = "";
         }
 
+        #region touchAndDeal
+        private void text_speed_touched(object sender, RoutedEventArgs e)
+        {
+            if (unitflag==true)
+            { unitflag = false; }
+            else
+            { unitflag = true; }
+        }
+
+        private void text_gpsspeed_touched(object sender, RoutedEventArgs e)
+        {
+            if (gpsunitflag == true)
+            { gpsunitflag = false; }
+            else
+            { gpsunitflag = true; }
+        }
+
+        #endregion
         #region AddInfo
         //Info Page
         private void HelpButton_Click(object sender, RoutedEventArgs e)
