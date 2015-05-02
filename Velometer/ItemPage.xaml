@@ -3,13 +3,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Velometer"
-    xmlns:data="using:Velometer.Data"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    DataContext="{Binding DefaultViewModel.Item, RelativeSource={RelativeSource Self}}"
-    d:DataContext="{Binding Groups[0].Items[0], Source={d:DesignData Source=/DataModel/SampleData.json, Type=data:SampleDataSource}}"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d" Name="page">
+
     <Page.Transitions>
         <TransitionCollection>
             <NavigationThemeTransition>
@@ -21,36 +18,54 @@
     </Page.Transitions>
 
     <Grid>
-        <Pivot x:Uid="Pivot" Title="Velometer" x:Name="pivot" 
-               CommonNavigationTransitionInfo.IsStaggerElement="True">
+        <Pivot Name="pivot">
             <!--Pivot item one-->
             <PivotItem
-                x:Uid="PivotItem1"
                 Margin="19,14.5,0,0"
                 Header="GPS">
-                <!--Double line list with text wrapping-->
-                <StackPanel Margin="0,0,0,9.5">
-                    <TextBlock Text="123"/>
-                </StackPanel>
+                <TextBlock FontSize="20" TextWrapping="Wrap">
+                        使用注意：
+                    <LineBreak/> 1. 适用于户外，以方便接收GPS信号；
+                    <LineBreak/> 2. 运动速度低于5m/s时，精度较低；
+                    <LineBreak/> 3. 测算速度前时无需归零。
+                    <LineBreak/>
+                    <LineBreak/>Attention:
+                    <LineBreak/>1. The GPS unit is only available outdoors and often does not perform well within forested areas or near tall buildings.
+                    <LineBreak/>2. The GPS unit gets higher accuracy when speed > 5m/s
+                    <LineBreak/>3. Do not need ZERO before measuring.
+                </TextBlock>
             </PivotItem>
 
             <!--Pivot item two-->
             <PivotItem
-                x:Uid="PivotItem2"
                 Margin="19,14.5,0,0"
-                Header="Accleration">
+                Header="Acclerometer">
                 <!--Double line list no text wrapping-->
-                <StackPanel Margin="0,0,0,9.5">
-                    <TextBlock Text="123"/>
-                </StackPanel>
+                <TextBlock FontSize="20" TextWrapping="Wrap">
+                        使用注意：
+                    <LineBreak/>1. 测算速度前，需在静止状态下点击“GO”以回零；
+                    <LineBreak/>2. 可适用于各种速度、各种环境下；
+                    <LineBreak/>3. 使用时请务必保证机身水平，否则会严重干扰测量结果（建议测量时将手机放在地板等水平面上）
+                    <LineBreak/>
+                    <LineBreak/>Attention:
+                    <LineBreak/>1. Before measuring, please press "GO" when you're stationary;
+                    <LineBreak/>2. Available under all speeds and environment
+                    <LineBreak/>3. When measuring, please make sure your screen is horizontal. Or the result may be terribly wrong. It's recommended to put your device on a horizontal plane (floor etc.) when measuring.
+                </TextBlock>
             </PivotItem>
         </Pivot>
     </Grid>
 
     <Page.BottomAppBar>
         <CommandBar>
-            <AppBarButton x:Name="AddAppBarButton"
-                          Icon="Add"/>
+            <AppBarButton x:Name="Email"
+                          Label="Tell me"
+                          Icon="MailForward"
+                          Click="email"/>
+            <AppBarButton x:Name="MoreApp"
+                          Label="More Apps"
+                          Icon="Shop"
+                          Click="otherapp"/>
         </CommandBar>
     </Page.BottomAppBar>
 </Page>

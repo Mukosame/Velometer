@@ -7,12 +7,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:data="using:Velometer.Data"
     mc:Ignorable="d"
-    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}">
-    <Page.Background>
-        <SolidColorBrush Color="#FFD7D1EA"/>
-    </Page.Background>
+    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}" Background="#FF00DAA9">
     <Page.BottomAppBar>
-        <CommandBar ClosedDisplayMode="Minimal" Background="Aqua">
+        <CommandBar ClosedDisplayMode="Minimal" Background="#FF009FDA">
             <AppBarButton Label="喜欢" Icon="Like" Click="LikeButton_Click"/>
             <AppBarButton Icon="Help" Label="帮助" Click="HelpButton_Click"/>
         </CommandBar>
@@ -28,15 +25,23 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <!--显示速度UI-->
-            <TextBlock Grid.Row="0"
+                <TextBlock Grid.Row="0"
+                           FontWeight="Light"
                        Name="speed"
-                       FontSize="100"
-                       Text="Speed"
+                       FontSize="129.333"
+                       Text="0.00"
                        VerticalAlignment="Top"
                        HorizontalAlignment="Center"
                        />
+            <TextBlock Grid.Row="0"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                           Name="unit1"
+                       FontSize="40"
+                           Text="m/s" FontWeight="Bold"
+                           />
 
-            <Grid Grid.Row="0" VerticalAlignment="Center">
+            <Grid Grid.Row="0" VerticalAlignment="Center" Visibility="Collapsed">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -62,22 +67,34 @@
                            />
             </Grid>
 
-            <Rectangle Fill="Aqua" Grid.Row="1"/>
+            <Rectangle Grid.Row="1" Fill="#FF009FDA"/>
             
             <TextBlock Grid.Row="1"
+                       FontWeight="Light"
                 x:Name="speed_GPS"
-            	FontSize="100"
-            	Text="Speed"
+            	FontSize="129.333"
+            	Text="0.00"
                        VerticalAlignment="Bottom"
             	HorizontalAlignment="Center"
                        Margin="51,0,48.833,0"
                        />
+            <TextBlock Grid.Row="1"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                           Name="unit2"
+                       FontSize="40"
+                           Text="m/s" FontWeight="Bold"
+                           />
         </Grid>
-        <Ellipse Fill="#FFF4F4F5" 
-                     Height="150" 
-                     Width="150"
+        <Ellipse 
+                     Height="192" 
+                     Width="192"
                      Name="zero"
-                     VerticalAlignment="Center"/>
+                     VerticalAlignment="Center">
+        	<Ellipse.Fill>
+        		<ImageBrush ImageSource="Assets/go.png" Stretch="UniformToFill"/>
+        	</Ellipse.Fill>
+        </Ellipse>
         <!--TextBlock  x:Name="headingAccuracy" Foreground="#FFC8C7CC" FontFamily="Assets/Helvetica LT 45 Light.ttf#HelveticaNeue LT 45 Light" HorizontalAlignment="Center"/-->
     </Grid>
 </Page>

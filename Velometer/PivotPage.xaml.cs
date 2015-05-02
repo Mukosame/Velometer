@@ -21,6 +21,7 @@ using Windows.Devices.Geolocation;
 using Windows.Devices.Sensors;
 using Windows.ApplicationModel;
 using Windows.UI.Popups;
+using Windows.UI.Xaml.Media.Imaging;
 
 // The Pivot Application template is documented at http://go.microsoft.com/fwlink/?LinkID=391641
 
@@ -44,6 +45,7 @@ namespace Velometer
         int an = 0;
         int gn = 0;
         bool unitflag = true; bool gpsunitflag = true;
+        bool run_state = false;
         Accelerometer accelerometer;
         AccelerometerReading accelerometerReading = null;
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
@@ -179,32 +181,48 @@ namespace Velometer
         //摸圆圈儿触发
         private async void Get_Acce_Data(object sender, RoutedEventArgs e)
         {
+            Init();
             //修改zero圆圈的颜色
-            //zero.Fill= ;
-            accelerometer = Accelerometer.GetDefault();
-            if (accelerometer == null)
-            {
-                await new MessageDialog("您的手机不支持加速度传感器").ShowAsync();
-                return;
-            }
-            else
-            {
-                //xv.Add(0); yv.Add(0); zv.Add(0); 
-                v.Add(0);
-                //最小时间间隔
-                accelerometer.ReportInterval = accelerometer.MinimumReportInterval;
-                //加速度变化
-                accelerometer.ReadingChanged += accelerometer_ReadingChanged;
-                //手机晃动
-                accelerometer.Shaken += accelerometer_Shaken;
-                //读取加速度数据
-                accelerometerReading = accelerometer.GetCurrentReading();
-                //显示数据
-                AcceShowData();
-                dispatcherTimer.Start();
-            }
+            /*
+            var img = new Uri("ms-appx://Assets/zero.png", UriKind.Absolute);
+            ImageBrush ib = new ImageBrush();
+            ib.ImageSource = new BitmapImage(img);
+            zero.Fill = ib;
+            */
+            //if (run_state == false)
+            //{
+                run_state = true;
+                accelerometer = Accelerometer.GetDefault();
+                if (accelerometer == null)
+                {
+                    await new MessageDialog("您的手机不支持加速度传感器").ShowAsync();
+                    return;
+                }
+                else
+                {
+                    //xv.Add(0); yv.Add(0); zv.Add(0); 
+                    v.Add(0);
+                    //最小时间间隔
+                    accelerometer.ReportInterval = accelerometer.MinimumReportInterval;
+                    //加速度变化
+                    accelerometer.ReadingChanged += accelerometer_ReadingChanged;
+                    //手机晃动
+                    accelerometer.Shaken += accelerometer_Shaken;
+                    //读取加速度数据
+                    accelerometerReading = accelerometer.GetCurrentReading();
+                    //显示数据
+                    AcceShowData();
+                    dispatcherTimer.Start();
+                }
 
-            Get_GPS_Data();
+                Get_GPS_Data();
+           // }
+           // else
+           // {
+           //     run_state = false;
+           //     dispatcherTimer.Stop();
+          //      Init();
+           // }
         }
 
         private async void accelerometer_ReadingChanged(Accelerometer sender, AccelerometerReadingChangedEventArgs args)
@@ -239,12 +257,14 @@ namespace Velometer
                 //v.Add(vector_add(xv[an], yv[an], zv[an]));
                 if (unitflag == true)
                 {
-                    speed.Text = v[an].ToString("0.00") + "m/s";
+                    speed.Text = v[an].ToString("0.00");
+                    unit1.Text = "m/s";
                 }
                 if (unitflag==false)
                 {
                     double vkm = v[an] / 3.6;
-                    speed.Text = vkm.ToString("0.0") + "km/h";
+                    speed.Text = vkm.ToString("0.0");
+                    unit1.Text = "km/h";
                 }
             }
             //显示加速传感器得到的速度数值
@@ -336,12 +356,14 @@ namespace Velometer
                         {
                             if (gpsunitflag == true)
                             {
-                                speed_GPS.Text = gv[gn].ToString("0.00")+"m/s";
+                                speed_GPS.Text = gv[gn].ToString("0.00");
+                                unit2.Text = "m/s";
                             }
                             else
                             {
                                 double gpstemp = gv[gn] / 3.6;
-                                speed_GPS.Text = gpstemp.ToString("0.0") + "km/h";
+                                speed_GPS.Text = gpstemp.ToString("0.0");
+                                unit2.Text = "km/h";
                             }
                         }
                     
@@ -397,10 +419,18 @@ namespace Velometer
             Longitude = new List<double>();
             an = 0;
             gn = 0;
-           speed.Text = "";
+           speed.Text = "0.00";
+           speed_GPS.Text = "0.00";
            xspeed.Text = "";
            yspeed.Text = "";
            zspeed.Text = "";
+            //换回圈圈颜色
+            /*
+           var img = new Uri("ms-appx://Assets/go.png", UriKind.Absolute);
+           ImageBrush ib = new ImageBrush();
+           ib.ImageSource = new BitmapImage(img);
+           zero.Fill = ib;
+             */ 
         }
 
         #region touchAndDeal

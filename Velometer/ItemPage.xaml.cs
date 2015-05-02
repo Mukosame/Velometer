@@ -15,6 +15,9 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI;
+using Windows.ApplicationModel.Email;//to send the email
+using Windows.Security.ExchangeActiveSyncProvisioning; //to create email object
 
 // The Pivot Application template is documented at http://go.microsoft.com/fwlink/?LinkID=391641
 
@@ -25,10 +28,9 @@ namespace Velometer
     /// </summary>
     public sealed partial class ItemPage : Page
     {
-        private const string FirstGroupName = "FirstGroup";
-        private const string SecondGroupName = "SecondGroup";
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
+        SolidColorBrush Brush = new SolidColorBrush();
 
         public ItemPage()
         {
@@ -85,8 +87,16 @@ namespace Velometer
             // TODO: Save the unique state of the page here.
         }
 
+        private void FirstPivot_Loaded(object sender, RoutedEventArgs e)
+        {
+            //Brush.Color = Color.FromArgb(255, 255, 0, 0);
+           // page.Background = Brush;
+        }
+
         private void SecondPivot_Loaded(object sender, RoutedEventArgs e)
         {
+            Brush.Color = Color.FromArgb(255,255,0,0);
+            page.Background=Brush;
         }
 
         #region NavigationHelper registration
@@ -114,6 +124,31 @@ namespace Velometer
             this.navigationHelper.OnNavigatedFrom(e);
         }
 
+        #endregion
+
+        #region Appemail
+        async void email(object sender, RoutedEventArgs e)
+        {
+
+            EasClientDeviceInformation CurrentDeviceInfor = new Windows.Security.ExchangeActiveSyncProvisioning.EasClientDeviceInformation();
+            String OSVersion = CurrentDeviceInfor.OperatingSystem;
+            String Manufacturer = CurrentDeviceInfor.SystemManufacturer;
+            String SystemProductName = CurrentDeviceInfor.SystemProductName;
+
+            Windows.ApplicationModel.Email.EmailMessage mail = new Windows.ApplicationModel.Email.EmailMessage();
+            mail.Subject = "[WP]-SpeedMeter";
+            mail.Body = "\n\n\n生产厂商：" + Manufacturer + "\n系统名：" + SystemProductName + "\nOS版本：" + OSVersion;
+            mail.To.Add(new Windows.ApplicationModel.Email.EmailRecipient("mukosame@gmail.com", "Mukosame"));
+            await Windows.ApplicationModel.Email.EmailManager.ShowComposeNewEmailAsync(mail);
+
+        }
+
+        //search in app store
+        private async void otherapp(object sender, RoutedEventArgs e)
+        {
+            var uri = new Uri(string.Format(@"ms-windows-store:search?publisher=Mukosame"));
+            await Windows.System.Launcher.LaunchUriAsync(uri);
+        }
         #endregion
     }
 }
