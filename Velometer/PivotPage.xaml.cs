@@ -57,6 +57,7 @@ namespace Velometer
                             //精度：高
             DesiredAccuracy = PositionAccuracy.High
         };
+        Geoposition pos;
 
         private void HardwareButtons_BackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
         {
@@ -173,13 +174,13 @@ namespace Velometer
 
         private void dispatcherTimer_Tick(object sender, object e)
         {
-            AcceShowData();
+            //AcceShowData();
             ShowGPSData();
         }
 
         #region accelerometer
         //摸圆圈儿触发
-        private async void Get_Acce_Data(object sender, RoutedEventArgs e)
+        public async void Get_Acce_Data(object sender, RoutedEventArgs e)
         {
             Init();
             //修改zero圆圈的颜色
@@ -225,12 +226,12 @@ namespace Velometer
            // }
         }
 
-        private async void accelerometer_ReadingChanged(Accelerometer sender, AccelerometerReadingChangedEventArgs args)
+        async void accelerometer_ReadingChanged(Accelerometer sender, AccelerometerReadingChangedEventArgs args)
         {
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
                     accelerometerReading = args.Reading;
-                    //AcceShowData();
+                    AcceShowData();
                 });
         }
 
@@ -241,16 +242,21 @@ namespace Velometer
 
         void AcceShowData()
         {
+            double xa = 0;
+            double ya = 0;
+            double za = 0;
+            accelerometerReading = accelerometer.GetCurrentReading();
             //读取数据
-            double xa = 9.81*accelerometerReading.AccelerationX;
-            double ya = 9.81*accelerometerReading.AccelerationY;
-            double za = 9.81*accelerometerReading.AccelerationZ;
+                xa = 9.81 * accelerometerReading.AccelerationX;
+                ya = 9.81 * accelerometerReading.AccelerationY;
+                za = 9.81 * accelerometerReading.AccelerationZ;
+
             //处理，计算数据
             double dt = 1;//accelerometer.MinimumReportInterval;
-            if (ya != 0)
-            {
+            //if (ya != 0)
+            //{
                 an++;
-                v.Add(v[an - 1] + dt * ya);
+                v.Add(v[an - 1] + dt * xa);
                 // xv.Add(xv[an - 1] + dt * xa);
                 //yv.Add(yv[an - 1] + dt * xa);
                 //zv.Add(zv[an - 1] + dt * xa);
@@ -266,13 +272,13 @@ namespace Velometer
                     speed.Text = vkm.ToString("0.0");
                     unit1.Text = "km/h";
                 }
-            }
+            //}
             //显示加速传感器得到的速度数值
             // xspeed.Text = "x: " + xv[an].ToString("0.00");
             //yspeed.Text = "y: " + yv[an].ToString("0.00");
             //zspeed.Text = "z: " + zv[an].ToString("0.00");
-            else
-            { }
+            //else
+           // { }
             xspeed.Text = xa.ToString("0.00");
             yspeed.Text = ya.ToString("0.00");
             zspeed.Text = za.ToString("0.00");
@@ -286,7 +292,7 @@ namespace Velometer
         #endregion
 
         #region gps
-        private async void Get_GPS_Data()
+        async void Get_GPS_Data()
         {
             if (gpswatcher == null)
             {
@@ -302,6 +308,7 @@ namespace Velometer
                 //传感器状态变化
                 gpswatcher.StatusChanged += gpswatcherStatusChanged;
                 //ShowGPSData();
+                pos = await gpswatcher.GetGeopositionAsync();
             }
         }
 
@@ -309,7 +316,8 @@ namespace Velometer
         {
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                //ShowGPSData();
+                pos = e.Position;
+               ShowGPSData();
             });
         }
 
@@ -333,11 +341,11 @@ namespace Velometer
             }
         }
 
-        async void ShowGPSData()
+         async void ShowGPSData()
         {
+            pos = await gpswatcher.GetGeopositionAsync();
             try
             {
-                Geoposition pos = await gpswatcher.GetGeopositionAsync();
                 double temp1 = pos.Coordinate.Point.Position.Latitude;
                 double temp2 = pos.Coordinate.Point.Position.Longitude;
 
